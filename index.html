@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Scholarship Application &amp; Disbursement Tracker</title>
+<link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-icon">🎓</span>
+        <div>
+          <h1>Scholarship Tracker</h1>
+          <p class="subtitle">Application &amp; Disbursement Status</p>
+        </div>
+      </div>
+      <button id="addBtn" class="btn btn-primary">+ New Application</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Summary strip -->
+    <section id="summaryStrip" class="summary-strip"></section>
+
+    <!-- Controls -->
+    <section class="controls">
+      <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="Search by name, student ID or application ID...">
+      </div>
+      <div class="filter-wrap">
+        <select id="stageFilter">
+          <option value="">All Stages</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Document Verification">Document Verification</option>
+          <option value="Forwarded for Sanction">Forwarded for Sanction</option>
+          <option value="Sanctioned">Sanctioned</option>
+          <option value="Disbursed">Disbursed</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <select id="schemeFilter">
+          <option value="">All Schemes</option>
+        </select>
+        <select id="sortSelect">
+          <option value="daysDesc">Longest at stage first</option>
+          <option value="daysAsc">Shortest at stage first</option>
+          <option value="nameAsc">Name (A-Z)</option>
+          <option value="dateDesc">Applied date (newest)</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- States -->
+    <section id="loadingState" class="state-box hidden">
+      <div class="spinner"></div>
+      <p>Loading applications…</p>
+    </section>
+
+    <section id="errorState" class="state-box hidden">
+      <p class="state-icon">⚠️</p>
+      <p id="errorMessage">Something went wrong while loading data.</p>
+      <button id="retryBtn" class="btn btn-secondary">Retry</button>
+    </section>
+
+    <section id="emptyState" class="state-box hidden">
+      <p class="state-icon">🗂️</p>
+      <p>No applications found.</p>
+      <p class="state-sub">Try clearing your search/filters, or add a new application.</p>
+    </section>
+
+    <!-- Table (desktop) / Cards (mobile) -->
+    <section id="dataWrap" class="data-wrap hidden">
+      <div class="table-scroll">
+        <table id="recordsTable">
+          <thead>
+            <tr>
+              <th>App ID</th>
+              <th>Student</th>
+              <th>Scheme</th>
+              <th>Applied</th>
+              <th>Documents</th>
+              <th>Stage</th>
+              <th>Days at Stage</th>
+              <th>Sanctioned Amt</th>
+              <th>Disbursed</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">New Application</h2>
+        <button id="closeModal" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <form id="recordForm" class="modal-body" novalidate>
+        <input type="hidden" id="application_id">
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Student ID *</span>
+            <input type="text" id="student_id" placeholder="e.g. STU1024">
+            <small class="err" data-for="student_id"></small>
+          </label>
+
+          <label class="field">
+            <span>Student Name *</span>
+            <input type="text" id="student_name" placeholder="e.g. Priya Kumar">
+            <small class="err" data-for="student_name"></small>
+          </label>
+
+          <label class="field">
+            <span>Scheme *</span>
+            <select id="scheme">
+              <option value="">Select scheme</option>
+              <option>State Merit Scholarship</option>
+              <option>Minority Welfare Scholarship</option>
+              <option>Post-Matric SC/ST Scholarship</option>
+              <option>Central Sector Scheme</option>
+              <option>Fee Reimbursement (EWS)</option>
+            </select>
+            <small class="err" data-for="scheme"></small>
+          </label>
+
+          <label class="field">
+            <span>Applied Date *</span>
+            <input type="date" id="applied_date">
+            <small class="err" data-for="applied_date"></small>
+          </label>
+
+          <label class="field">
+            <span>Documents Status *</span>
+            <select id="documents_status">
+              <option value="">Select status</option>
+              <option>Pending</option>
+              <option>Incomplete</option>
+              <option>Verified</option>
+              <option>Rejected</option>
+            </select>
+            <small class="err" data-for="documents_status"></small>
+          </label>
+
+          <label class="field">
+            <span>Stage *</span>
+            <select id="stage">
+              <option value="">Select stage</option>
+              <option>Submitted</option>
+              <option>Document Verification</option>
+              <option>Forwarded for Sanction</option>
+              <option>Sanctioned</option>
+              <option>Disbursed</option>
+              <option>Rejected</option>
+            </select>
+            <small class="err" data-for="stage"></small>
+          </label>
+
+          <label class="field">
+            <span>Sanctioned Amount (₹)</span>
+            <input type="number" id="sanctioned_amount" min="0" step="1" placeholder="0">
+            <small class="err" data-for="sanctioned_amount"></small>
+          </label>
+
+          <label class="field">
+            <span>Disbursed Date</span>
+            <input type="date" id="disbursed_date">
+            <small class="err" data-for="disbursed_date"></small>
+          </label>
+        </div>
+
+        <p class="form-note">Fields marked * are required. Disbursed date is only allowed once Stage is "Disbursed".</p>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Application</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detail / Status Modal -->
+  <div id="detailOverlay" class="modal-overlay hidden">
+    <div class="modal modal-small">
+      <div class="modal-header">
+        <h2>Application Status</h2>
+        <button id="closeDetail" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <div id="detailBody" class="modal-body detail-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="index.js"></script>
+</body>
+</html>
